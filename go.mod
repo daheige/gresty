@@ -1,9 +1,7 @@
-module github.com/daheige/gResty
+module github.com/daheige/gresty
 
-go 1.12
+go 1.24.0
 
-require (
-	github.com/bitly/go-simplejson v0.5.0 // indirect
-	github.com/go-resty/resty/v2 v2.0.0
-	github.com/mozillazg/request v0.8.0 // indirect
-)
+require github.com/go-resty/resty/v2 v2.17.1
+
+require golang.org/x/net v0.48.0 // indirect
