@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/http/cookiejar"
 	"os"
 	"strings"
 	"time"
@@ -103,13 +104,6 @@ func (r *Reply) Json(data interface{}) error {
 	}
 
 	return nil
-}
-
-// ApiStdRes 标准的api返回格式
-type ApiStdRes struct {
-	Code    int
-	Message string
-	Data    interface{}
 }
 
 // New 创建一个service实例
@@ -232,11 +226,13 @@ func (s *Service) Request(client *resty.Client, req *RequestOptions) *Reply {
 	}
 
 	// cookie设置
-	// 启用Cookie管理
 	if req.Jar != nil {
+		// SetCookieJar 方法用于管理 HTTP 请求和响应中的 Cookie
+		// 通过设置 Cookie Jar，可以自动处理 Cookie 的存储和发送
 		client.SetCookieJar(req.Jar)
 	}
 
+	// 若需手动设置 Cookie，可使用 SetCookies 方法
 	if len(req.Cookies) > 0 {
 		client = client.SetCookies(req.Cookies)
 	}
@@ -255,9 +251,12 @@ func (s *Service) Request(client *resty.Client, req *RequestOptions) *Reply {
 		}
 	}
 
-	var resp *resty.Response
-	var err error
-	method := strings.ToLower(req.Method)
+	var (
+		resp   *resty.Response
+		err    error
+		method = strings.ToLower(req.Method)
+	)
+
 	switch method {
 	case "get", "delete", "head":
 		client = client.SetQueryParams(s.ParseData(req.Params))
@@ -367,4 +366,12 @@ func (s *Service) GetResult(resp *resty.Response, err error) *Reply {
 	}
 
 	return res
+}
+
+// NewCookieJar 调用 cookiejar.New(nil) 函数，使用默认公共后缀列表，确保 Cookie 域匹配
+// 这样就可以通过 jar.SetCookies 方法设置http cookie 从而实现cookie自动发送和管理
+// 也可以使用 jar.Cookies 方法获取 http cookies
+func (s *Service) NewCookieJar() (*cookiejar.Jar, error) {
+	jar, err := cookiejar.New(nil)
+	return jar, err
 }
